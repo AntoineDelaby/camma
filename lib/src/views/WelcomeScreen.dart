@@ -97,7 +97,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   onTap: () {
                     Navigator.pushNamed(context, '/profile');
                   },
-                  child: Row(
+                  child: const Row(
                     children: [
                       Icon(Icons.person_rounded),
                       Padding(
@@ -109,9 +109,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       ),
                     ],
                   ))),
-          Spacer(),
+          const Spacer(),
           Padding(
-              padding: EdgeInsets.only(left: 30, right: 30, bottom: 30),
+              padding: const EdgeInsets.only(left: 30, right: 30, bottom: 30),
               child: InkWell(
                 onTap: () {
                   Navigator.pushReplacementNamed(context, '/login');
@@ -188,7 +188,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     children: [
                       Text("Camma",
                           style: TextStyle(
-                              color: CustomColors.primary, fontSize: 30)),
+                              color: CustomColors.primary_dark, fontSize: 30)),
                       IconButton(
                         icon: const Icon(Icons.settings_rounded),
                         iconSize: 30,

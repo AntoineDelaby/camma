@@ -1,10 +1,7 @@
-import 'dart:math';
+import 'dart:convert';
 
-import 'package:campma/src/custom_components/LocationCustomItem.dart';
+import 'package:campma/src/services/AuthentificationServices.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-
-import '../models/Location.dart';
 import '../theme/CustomColors.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -22,12 +19,20 @@ class _LoginScreenState extends State<LoginScreen> {
   String? _username = '';
   String? _password = '';
 
-  Offset _gridOffset = Offset.zero;
+  final Offset _gridOffset = Offset.zero;
 
   bool _obscureText = true;
+  bool? _invalidCredentials;
+
   void _togglePasswordVisibility() {
     setState(() {
       _obscureText = !_obscureText;
+    });
+  }
+
+  void _toggleInvalidCredentials(bool? newValue) {
+    setState(() {
+      _invalidCredentials = newValue;
     });
   }
 
@@ -54,30 +59,33 @@ class _LoginScreenState extends State<LoginScreen> {
               right: 0,
               bottom: 0,
               child: Padding(
-                  padding: EdgeInsets.only(top: 100, left: 50, right: 50),
+                  padding: const EdgeInsets.only(top: 100, left: 50, right: 50),
                   child: Column(
                     children: [
-                      Text(
+                      const Text(
                         "Camma",
                         style: TextStyle(
                             fontSize: 65, color: CustomColors.primary_dark),
                       ),
                       Padding(
-                        padding: EdgeInsets.symmetric(vertical: 50),
+                        padding: const EdgeInsets.symmetric(vertical: 50),
                         child: Form(
                           key: _formKey,
                           child: Column(
                             children: [
                               Padding(
-                                padding: EdgeInsets.symmetric(vertical: 15),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 15),
                                 child: TextFormField(
-                                  decoration:
-                                      InputDecoration(labelText: 'Identifiant'),
+                                  decoration: const InputDecoration(
+                                      labelText: 'Identifiant',
+                                      prefixIcon: Icon(Icons.person_rounded)),
                                   validator: (value) {
                                     if (value != null) {
                                       final emailRegex = RegExp(
                                           r'^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$');
-                                      if (value.isEmpty || !emailRegex.hasMatch(value)) {
+                                      if (value.isEmpty ||
+                                          !emailRegex.hasMatch(value)) {
                                         return 'Veuillez entrer une adresse e-mail valide';
                                       }
                                     }
@@ -89,20 +97,25 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               ),
                               Padding(
-                                padding: EdgeInsets.symmetric(vertical: 15),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 15),
                                 child: TextFormField(
                                   obscureText: _obscureText,
                                   decoration: InputDecoration(
-                                    suffixIcon: GestureDetector(
-                                      onTap: _togglePasswordVisibility,
-                                      child: Icon(_obscureText ? Icons.visibility : Icons.visibility_off),
-                                    ),
+                                      prefixIcon: const Icon(Icons.lock),
+                                      suffixIcon: GestureDetector(
+                                        onTap: _togglePasswordVisibility,
+                                        child: Icon(_obscureText
+                                            ? Icons.visibility
+                                            : Icons.visibility_off),
+                                      ),
                                       labelText: 'Mot de passe'),
                                   validator: (value) {
                                     if (value != null) {
                                       final passwordRegex = RegExp(
                                           r'^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+])(?=.*[a-z]).{8,}$');
-                                      if (value.isEmpty || !passwordRegex.hasMatch(value)) {
+                                      if (value.isEmpty ||
+                                          !passwordRegex.hasMatch(value)) {
                                         return 'Le mot de passe doit faire au moins 8 caractères, '
                                             'avoir au moins 1 chiffre, 1 majuscule et 1 caractère spécial';
                                       }
@@ -114,43 +127,68 @@ class _LoginScreenState extends State<LoginScreen> {
                                   },
                                 ),
                               ),
+                              if (_invalidCredentials != null &&
+                                  _invalidCredentials == false)
+                                const Text(
+                                  "Identifiant ou mot de passe invalide",
+                                  style: TextStyle(color: CustomColors.red),
+                                ),
                               Container(
-                                padding: EdgeInsets.only(top: 100),
+                                padding: const EdgeInsets.only(top: 100),
                                 width: 300,
                                 child: ElevatedButton(
                                   style: ButtonStyle(
-                                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                    shape: MaterialStateProperty.all<
+                                        RoundedRectangleBorder>(
                                       RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10.0), // Modifier le rayon ici
+                                        borderRadius: BorderRadius.circular(
+                                            10.0), // Modifier le rayon ici
                                       ),
                                     ),
                                   ),
-                                  onPressed: () {
+                                  onPressed: () async {
                                     if (_formKey.currentState!.validate()) {
                                       _formKey.currentState!.save();
-                                      Navigator.pushReplacementNamed(context, '/');
+                                      var loginTest =
+                                          await AuthentificationServices.login(
+                                              _username!, _password!);
+                                      var jsonResults =
+                                          jsonDecode(loginTest.body);
+                                      if (jsonResults['result']['uid'] !=
+                                          null) {
+                                        Navigator.pushReplacementNamed(
+                                            context, '/');
+                                      } else {
+                                        _toggleInvalidCredentials(false);
+                                      }
                                     }
                                   },
-                                  child: Text('Connexion'),
+                                  child: const Text('Connexion'),
                                 ),
                               ),
-                              Container(
+                              SizedBox(
                                 width: 300,
                                 child: ElevatedButton(
                                   style: ButtonStyle(
-                                    backgroundColor: MaterialStateProperty.all<Color?>(
-                                      CustomColors.secondary
-                                    ),
-                                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                                    backgroundColor:
+                                        MaterialStateProperty.all<Color?>(
+                                            CustomColors.secondary),
+                                    shape: MaterialStateProperty.all<
+                                        RoundedRectangleBorder>(
                                       RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10.0), // Modifier le rayon ici
+                                        borderRadius: BorderRadius.circular(
+                                            10.0), // Modifier le rayon ici
                                       ),
                                     ),
                                   ),
                                   onPressed: () {
-                                    Navigator.pushReplacementNamed(context, '/register');
+                                    Navigator.pushReplacementNamed(
+                                        context, '/register');
                                   },
-                                  child: Text('Créer un compte', style: TextStyle(color: Colors.white),),
+                                  child: const Text(
+                                    'Créer un compte',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
                                 ),
                               )
                             ],
